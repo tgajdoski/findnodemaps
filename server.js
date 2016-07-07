@@ -14,7 +14,7 @@ var twitter = require('twitter'),
 var con = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "",
+  password: "root",
   database: "nodetest"
 }),
   POLLING_INTERVAL = 10000,
@@ -36,16 +36,16 @@ server.listen(process.env.PORT || 3000);
 app.use(express.static(__dirname + '/public'));
 
  var i = 0;
- 
+
 //Create web sockets connection.
 io.sockets.on('connection', function (socket) {
 
 		// work with mysql;
-	
 
-	
 
-	
+
+
+
   socket.on("start tweets", function() {
 
     if(stream === null) {
@@ -53,7 +53,7 @@ io.sockets.on('connection', function (socket) {
       twit.stream('statuses/filter', {'locations':'-180,-90,180,90'}, function(stream) {
           stream.on('data', function(data) {
               // Does the JSON result have coordinates
-			
+
               if (data.coordinates){
                 if (data.coordinates !== null){
                   //If so then build up some nice json and send out to web sockets
@@ -99,24 +99,24 @@ io.sockets.on('connection', function (socket) {
               });
           });
       });
-   
-   
+
+
    twit.stream('statuses/filter', {track: 'java,scala,akka,lightbend,typesafe'}, function(stream) {
    stream.on('data', function(tweet) {
     // console.log(tweet.text);
 	if (tweet){
-                
+
                   //If so then build up some nice json and send out to web sockets
                   var outputPoint = {"text": tweet.text,"created_at": tweet.created_at, "user": tweet.user.name, "imageurl": tweet.user.profile_image_url};
                   socket.broadcast.emit("twitter-java", outputPoint);
                   socket.emit('twitter-java', outputPoint);
-				  
+
 				  // na sekoj tweet sto se pojavuva gi osvezuva zapisite od mysql - treba da e nezavisno
-				  
-				   
+
+
                 }
   });
- 
+
   stream.on('error', function(error) {
     throw error;
   });
@@ -125,13 +125,13 @@ io.sockets.on('connection', function (socket) {
    }
   });
 
-	
+
 	setInterval(function() {
-    if ( new Date().getSeconds() === 0 )  pollingLoop(socket);;
+    if ( new Date().getSeconds() === 0  || new Date().getSeconds() === 30 )  pollingLoop(socket);;
 },1000);
-	
+
 	// pollingTimer = setTimeout(pollingLoop(socket), POLLING_INTERVAL);
-  
+
     // Emits signal to the client telling them that the
     // they are connected and can start receiving Tweets
     socket.emit("connected");
@@ -144,8 +144,8 @@ io.sockets.on('connection', function (socket) {
 var pollingLoop = function(socket) {
 
   // Doing the database query
-  
-  var query = con.query('SELECT * FROM locations'),
+
+  var query = con.query('SELECT * FROM locations where solved =0'),
     locations = []; // this array will contain the result of our db query
 
   // setting the query listeners
@@ -158,6 +158,7 @@ var pollingLoop = function(socket) {
     .on('result', function(location) {
       // it fills our array looping on each user row inside the db
       locations.push(location);
+      console.log(location);
 	 /*  socket.broadcast.emit("mysql-data", locations);
 	  socket.emit('mysql-data', locations); */
     })
@@ -177,4 +178,3 @@ var updateSockets = function(socket, data) {
   data.time = new Date();
     socket.volatile.emit('mysql-data', data);
 };
-

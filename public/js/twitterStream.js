@@ -14,9 +14,9 @@ function initialize() {
     styles: light_grey_style
   };
   var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
-  
+
  // console.log(map);
-  
+
   //Setup heat map and link to Twitter array we will append data to
   var heatmap;
     var liveTweets = new google.maps.MVCArray();
@@ -30,7 +30,7 @@ function initialize() {
     // Storage for WebSocket connections
     var socket = io.connect('/');
 
-    // This listens on the "twitter-steam" channel and data is 
+    // This listens on the "twitter-steam" channel and data is
     // received everytime a new tweet is receieved.
     socket.on('twitter-stream', function (data) {
 
@@ -51,7 +51,7 @@ function initialize() {
       },600);
 
     });
-	
+
 	socket.on('twitter-java', function (data) {
 //	console.log("twit java");
       var tweetData = data;
@@ -62,26 +62,26 @@ function initialize() {
 			$('#tweetimageurl').attr("src", tweetData.imageurl);
     });
 
-	
+
 	socket.on('mysql-data', function (data) {
 	//	console.log("mysql-data");
-	  console.log(data.time);
-	
+	  console.log(data);
+
     });
-	
-	
-    // Listens for a success response from the server to 
+
+
+    // Listens for a success response from the server to
     // say the connection was successful.
     socket.on("connected", function(r) {
 
-      //Now that we are connected to the server let's tell 
+      //Now that we are connected to the server let's tell
       //the server we are ready to start receiving tweets.
       socket.emit("start tweets");
-	  
+
 	  // try with timeout to invoce mysql query
 	//  setTimeout( function() {socket.emit("start mysql");}, 5000);
-	  
-	  
+
+
     });
   }
 }
