@@ -55,14 +55,21 @@ function initialize() {
 	socket.on('twitter-java', function (data) {
 //	console.log("twit java");
       var tweetData = data;
-	  console.log(tweetData);
+	//  console.log(tweetData);
 			$('#tweetdate').text(tweetData.created_at);
 			$('#tweetuser').text(tweetData.text);
 			$('#tweettext').text(tweetData.user);
 			$('#tweetimageurl').attr("src", tweetData.imageurl);
     });
-	
 
+	
+	socket.on('mysql-data', function (data) {
+	//	console.log("mysql-data");
+	  console.log(data.time);
+	
+    });
+	
+	
     // Listens for a success response from the server to 
     // say the connection was successful.
     socket.on("connected", function(r) {
@@ -70,6 +77,11 @@ function initialize() {
       //Now that we are connected to the server let's tell 
       //the server we are ready to start receiving tweets.
       socket.emit("start tweets");
+	  
+	  // try with timeout to invoce mysql query
+	//  setTimeout( function() {socket.emit("start mysql");}, 5000);
+	  
+	  
     });
   }
 }
