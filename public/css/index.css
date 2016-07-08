@@ -114,6 +114,8 @@ body {
 #map_canvas{
   height:100%;
 }
+
+
 #tweets{
   position: absolute;
   top: 60px;

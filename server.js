@@ -14,7 +14,7 @@ var twitter = require('twitter'),
 var con = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "root",
+  password: "",
   database: "nodetest"
 }),
   POLLING_INTERVAL = 10000,
@@ -35,6 +35,24 @@ server.listen(process.env.PORT || 3000);
 //Setup rotuing for app
 app.use(express.static(__dirname + '/public'));
 
+app.post("/setlocs", function(req, res) {
+  
+    var location = {
+        latitude: req.body.latitude,
+        longitude: req.body.longitude,
+		markertext: req.body.markertext
+    };
+
+	
+     con.query('INSERT INTO locations SET  ?', location, function(error) {
+        if (error) {
+            console.log(error.message);
+        } else {
+            console.log('success');    
+        }
+    }); 
+});
+
  var i = 0;
 
 //Create web sockets connection.
@@ -42,7 +60,7 @@ io.sockets.on('connection', function (socket) {
 
 		// work with mysql;
 
-
+ pollingLoop(socket);
 
 
 
@@ -86,7 +104,10 @@ io.sockets.on('connection', function (socket) {
                   }
                 }
               }
-              stream.on('limit', function(limitMessage) {
+              
+			  
+          });
+		  stream.on('limit', function(limitMessage) {
                 return console.log(limitMessage);
               });
 
@@ -97,11 +118,13 @@ io.sockets.on('connection', function (socket) {
               stream.on('disconnect', function(disconnectMessage) {
                 return console.log(disconnectMessage);
               });
-          });
+			   stream.on('error', function(error) {
+					return console.log('ISPISUVAM OD TUKA' + error);
+			 });
       });
 
 
-   twit.stream('statuses/filter', {track: 'java,scala,akka,lightbend,typesafe'}, function(stream) {
+      twit.stream('statuses/filter', {track: 'java,scala,akka,lightbend,typesafe'}, function(stream) {
    stream.on('data', function(tweet) {
     // console.log(tweet.text);
 	if (tweet){
@@ -118,22 +141,42 @@ io.sockets.on('connection', function (socket) {
   });
 
   stream.on('error', function(error) {
-    throw error;
+	  // res.destroy();
+	return  console.log('ISPISUVAM OD nadvor' + error);
   });
+  
+  socket.on('uncaughtException', function (err) {
+	// console.error(err.stack);
+	return console.log("Node NOT Exiting...");
+	});
 });
 
    }
   });
 
+  socket.on('uncaughtException', function (err) {
+//	console.error(err.stack);
+	console.log("Node NOT Exiting nadvor...");
+	});
+	
+	socket.on('limit', function(limitMessage) {
+		return console.log(limitMessage);
+	});
 
+	socket.on('warning', function(warning) {
+		return console.log(warning);
+	});
+
+	socket.on('disconnect', function(disconnectMessage) {
+		return console.log(disconnectMessage);
+	});
+	socket.on('error', function(error) {
+		return console.log('totalno nadvor OD TUKA' + error);
+	});
+  
 	setInterval(function() {
-    if ( new Date().getSeconds() === 0  || new Date().getSeconds() === 30 )  pollingLoop(socket);;
-},1000);
-
-	// pollingTimer = setTimeout(pollingLoop(socket), POLLING_INTERVAL);
-
-    // Emits signal to the client telling them that the
-    // they are connected and can start receiving Tweets
+		if ( new Date().getSeconds() === 0  || new Date().getSeconds() === 30 )  pollingLoop(socket);;
+	},1000);
     socket.emit("connected");
 });
 
@@ -145,7 +188,7 @@ var pollingLoop = function(socket) {
 
   // Doing the database query
 
-  var query = con.query('SELECT * FROM locations where solved =0'),
+  var query = con.query('SELECT * FROM locations where solved =0 order by id desc'),
     locations = []; // this array will contain the result of our db query
 
   // setting the query listeners
@@ -163,9 +206,6 @@ var pollingLoop = function(socket) {
 	  socket.emit('mysql-data', locations); */
     })
     .on('end', function() {
-      // loop on itself only if there are sockets still connected
-      //  pollingTimer = setTimeout(pollingLoop(socket), POLLING_INTERVAL);
-	  console.log("pooling dddd");
 		 updateSockets(socket, {
           locations: locations
         });
@@ -175,6 +215,5 @@ var pollingLoop = function(socket) {
 
 var updateSockets = function(socket, data) {
   // adding the time of the last update
-  data.time = new Date();
     socket.volatile.emit('mysql-data', data);
 };

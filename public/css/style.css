@@ -2354,6 +2354,17 @@ div.dt-button-info {
   height: 400px;
  width: 980px;
 }
+
+#map_canvas_click{
+    width: 350px;
+    height: 410px;
+}
+
+.google-map-small {
+  height: 350px;
+ width: 410px;
+}
+
 /* Validation */
 label.error {
   color: #cc5965;
@@ -3405,6 +3416,8 @@ video {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   outline: 0 none;
   position: relative;
+    width: 700px;
+  height: 550px;
 }
 .modal-dialog {
   z-index: 2200;

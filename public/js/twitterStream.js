@@ -64,8 +64,59 @@ function initialize() {
 
 
 	socket.on('mysql-data', function (data) {
-	//	console.log("mysql-data");
-	  console.log(data);
+		  					
+				var $mapDiv = $('#map1');
+
+				
+				var mapDim = {
+					height: $mapDiv.height(),
+					width: $mapDiv.width()
+				}
+
+				var markers =[];
+				
+				for(var i=0;i<data.locations.length;i++){
+				//	console.log(data.locations[i]);
+				//	console.log(data.locations[i].latitude);
+				//	console.log(data.locations[i].longitude);
+					
+					 markers[i] = new google.maps.Marker({
+					  position: new google.maps.LatLng(data.locations[i].latitude, data.locations[i].longitude),
+					  map: map,
+					  title: 'Marker ' + i,
+					  markertext : data.locations[i].markertext
+					});
+					
+					markers[i].setAnimation(google.maps.Animation.BOUNCE);
+				};
+				
+
+				var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : null;
+				//Initializing the options for the map
+			/* 	var myOptions = {
+				 center: myLatlng,
+				 zoom: 8,
+				 mapTypeId: google.maps.MapTypeId.ROADMAP,
+				};
+				 */
+				
+				
+			//	console.log( bounds.getCenter());
+			//	console.log( bounds.getCenter().lng());
+				//Creating the map in teh DOM
+				var map_element=document.getElementById("map1");
+			//	var map = new google.maps.Map(map_element,myOptions);
+				
+				var map = new google.maps.Map(map_element, {
+				center: (bounds) ?  bounds.getCenter() : new google.maps.LatLng(0, 0),
+				mapTypeId: google.maps.MapTypeId.ROADMAP,
+				zoom: (bounds) ? getBoundsZoomLevel(bounds, mapDim) : 0
+				});
+				//now fit the map to the newly inclusive bounds
+
+				
+				setMarkers(map,markers);
+	  
 
     });
 
@@ -85,3 +136,221 @@ function initialize() {
     });
   }
 }
+
+
+
+
+//Calling the locateme function when the document finishes loading
+
+ $(document).ready(function() {
+    
+	
+	$('#modal-form').hide();
+	
+	
+	
+	
+	
+	locateMe();
+	
+
+});
+
+function getBoundsZoomLevel(bounds, mapDim) {
+    var WORLD_DIM = { height: 256, width: 256 };
+    var ZOOM_MAX = 21;
+
+    function latRad(lat) {
+        var sin = Math.sin(lat * Math.PI / 180);
+        var radX2 = Math.log((1 + sin) / (1 - sin)) / 2;
+        return Math.max(Math.min(radX2, Math.PI), -Math.PI) / 2;
+    }
+
+    function zoom(mapPx, worldPx, fraction) {
+        return Math.floor(Math.log(mapPx / worldPx / fraction) / Math.LN2);
+    }
+
+    var ne = bounds.getNorthEast();
+    var sw = bounds.getSouthWest();
+
+    var latFraction = (latRad(ne.lat()) - latRad(sw.lat())) / Math.PI;
+
+    var lngDiff = ne.lng() - sw.lng();
+    var lngFraction = ((lngDiff < 0) ? (lngDiff + 360) : lngDiff) / 360;
+
+    var latZoom = zoom(mapDim.height, WORLD_DIM.height, latFraction);
+    var lngZoom = zoom(mapDim.width, WORLD_DIM.width, lngFraction);
+
+    return Math.min(latZoom, lngZoom, ZOOM_MAX);
+}
+
+
+
+function createBoundsForMarkers(markers) {
+    var bounds = new google.maps.LatLngBounds();
+    $.each(markers, function() {
+        bounds.extend(this.getPosition());
+    });
+    return bounds;
+}
+
+
+
+
+//Function to locate the user
+var locateMe = function(){
+
+	var map_element= $('#map');
+		if (navigator.geolocation) {
+		   var position= navigator.geolocation.getCurrentPosition(loadMap);
+		} else {
+		  map_element.innerHTML = "Geolocation is not supported by this browser.";
+		}
+  	
+};
+
+	function setMarkers(map,locations){
+		var marker, i
+		for (i = 0; i < locations.length; i++)
+		{  
+
+			 var loan = locations[i].markertext;
+			 var lat =  locations[i].position.lat();
+			 var long =  locations[i].position.lng();
+			
+		//	console.log ( locations[i].position);
+			
+
+			 latlngset = new google.maps.LatLng(lat, long);
+				
+				var marker = new google.maps.Marker({  
+					  map: map, 
+					  title: loan, 
+					  position: latlngset,  
+					});
+					
+					if (i==0){
+					  marker.setAnimation(google.maps.Animation.BOUNCE)	;		  
+					};
+					// map.setCenter(marker.getPosition())
+				 
+
+					var content =  loan +  '</h3>';
+
+			  var infowindow = new google.maps.InfoWindow();
+
+			google.maps.event.addListener(marker,'click', (function(marker,content,infowindow){ 
+					return function() {
+					   infowindow.setContent(content);
+					   infowindow.open(map,marker);
+					};
+				})(marker,content,infowindow)); 
+
+		}
+};
+		   
+
+//Lets load the mop using the position
+var loadMap = function(position) {
+  var loading= $('#loading');
+  var latitude=position.coords.latitude;
+  var longitude=position.coords.longitude;
+  var myLatlng = new google.maps.LatLng(latitude, longitude);
+     	//Initializing the options for the map
+     	var myOptions = {
+         center: myLatlng,
+         zoom: 15,
+         mapTypeId: google.maps.MapTypeId.ROADMAP,
+      };
+  		//Creating the map in teh DOM
+      var map_element=document.getElementById("map2");
+      var map = new google.maps.Map(map_element,myOptions);
+  		//Adding markers to it
+      var marker = new google.maps.Marker({
+          position: myLatlng,
+          map: map,
+          title: 'You are here'
+      });
+  		//Adding the Marker content to it
+      var infowindow = new google.maps.InfoWindow({
+          content: "<h2>You are here :)</h2>",
+        	//Settingup the maxwidth
+          maxWidth: 300
+      });
+  		//Event listener to trigger the marker content
+      google.maps.event.addListener(marker, 'click', function() {
+          infowindow.open(map,marker);});
+		  
+		  
+		// location picker  
+		var map_element2=document.getElementById("map_canvas_click");
+		var settings = {
+        zoom: 11,
+        center: myLatlng,
+        scaleControl: true,
+        mapTypeControlOptions: {
+            style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
+        },
+        navigationControl: true,
+        navigationControlOptions: {
+            style: google.maps.NavigationControlStyle.DEFAULT
+        },
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+    };
+
+    mapp = new google.maps.Map(map_element2, settings);
+    google.maps.event.addListener(mapp, 'click', function(event)
+	{
+		// alert('Lat: ' + event.latLng.lat() + ' Lng: ' + event.latLng.lng())
+			
+		$('#latit').val(event.latLng.lat());
+		$('#longit').val(event.latLng.lng());
+		
+	});
+	
+	
+	$( "#addmarker" ).click(function() {
+				
+		// treba da se postira i da se fati na starna na node.js i da se insertira vo mysql
+		var latitude = $('#latit').val();
+		var longitude = $('#longit').val();
+		var markertext = $('#markertext').val();
+		
+		  
+		$.ajax({
+			type: 'post',
+			url: '/setlocs',
+			data:{
+				latitude: latitude,
+				longitude: longitude,
+				markertext: markertext
+			},
+			success: function() {
+				// notification 
+			},
+			error: function(err) {
+				 console.log(err);
+			}
+		});
+		
+		
+	});
+	
+	
+
+		$( "#popupmarker" ).click(function() {
+			$('#modal-form').show();
+						
+			 $('#modal-form').modal({
+					backdrop: 'static',
+					keyboard: false
+				}).on('shown.bs.modal', function () {
+					google.maps.event.trigger(map, 'resize');
+					map.setCenter(center);
+				});
+	
+	
+	});  
+};
+
+
