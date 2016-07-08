@@ -7,8 +7,9 @@
     "start": "node app"
   },
   "dependencies": {
+    "body-parser": "^1.15.2",
     "express": "*",
-    "twitter": "*",
-    "socket.io": "*"
+    "socket.io": "*",
+    "twitter": "*"
   }
 }

@@ -5,11 +5,14 @@ var twitter = require('twitter'),
     http = require('http'),
     server = http.createServer(app),
     io = require('socket.io').listen(server),
-	mysql = require("mysql");
+	mysql = require("mysql"),
+	url = require('url'),
+	request = require('request'),
+	bodyParser = require('body-parser');
 
 
-
-
+	
+	
 // First you need to create a connection to the db
 var con = mysql.createConnection({
   host: "localhost",
@@ -35,12 +38,22 @@ server.listen(process.env.PORT || 3000);
 //Setup rotuing for app
 app.use(express.static(__dirname + '/public'));
 
+// app.use(express.json());       // to support JSON-encoded bodies
+// app.use(express.urlencoded()); // to support URL-encoded bodies
+
 app.post("/setlocs", function(req, res) {
   
+  
+  
+	// console.log("VNATREEEE VO POST0--------------------------------------------");
+  // 	console.log(req.query.latitude);
+	// console.log("VNATREEEE VO POST0--------------------------------------------");
+  
+   
     var location = {
-        latitude: req.body.latitude,
-        longitude: req.body.longitude,
-		markertext: req.body.markertext
+        latitude: req.query.latitude,
+        longitude: req.query.longitude,
+		markertext: req.query.markertext
     };
 
 	
@@ -48,9 +61,9 @@ app.post("/setlocs", function(req, res) {
         if (error) {
             console.log(error.message);
         } else {
-            console.log('success');    
+			res.send(location);
         }
-    }); 
+    });  
 });
 
  var i = 0;
@@ -201,7 +214,9 @@ var pollingLoop = function(socket) {
     .on('result', function(location) {
       // it fills our array looping on each user row inside the db
       locations.push(location);
-      console.log(location);
+	  
+  //    console.log(location);
+  
 	 /*  socket.broadcast.emit("mysql-data", locations);
 	  socket.emit('mysql-data', locations); */
     })
