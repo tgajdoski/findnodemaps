@@ -11,13 +11,13 @@ var twitter = require('twitter'),
 	bodyParser = require('body-parser');
 
 
-	
-	
+
+
 // First you need to create a connection to the db
 var con = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "",
+  password: "root",
   database: "nodetest"
 }),
   POLLING_INTERVAL = 10000,
@@ -42,28 +42,28 @@ app.use(express.static(__dirname + '/public'));
 // app.use(express.urlencoded()); // to support URL-encoded bodies
 
 app.post("/setlocs", function(req, res) {
-  
-  
-  
+
+
+
 	// console.log("VNATREEEE VO POST0--------------------------------------------");
   // 	console.log(req.query.latitude);
 	// console.log("VNATREEEE VO POST0--------------------------------------------");
-  
-   
+
+
     var location = {
         latitude: req.query.latitude,
         longitude: req.query.longitude,
 		markertext: req.query.markertext
     };
 
-	
+
      con.query('INSERT INTO locations SET  ?', location, function(error) {
         if (error) {
             console.log(error.message);
         } else {
 			res.send(location);
         }
-    });  
+    });
 });
 
  var i = 0;
@@ -117,8 +117,8 @@ io.sockets.on('connection', function (socket) {
                   }
                 }
               }
-              
-			  
+
+
           });
 		  stream.on('limit', function(limitMessage) {
                 return console.log(limitMessage);
@@ -157,7 +157,7 @@ io.sockets.on('connection', function (socket) {
 	  // res.destroy();
 	return  console.log('ISPISUVAM OD nadvor' + error);
   });
-  
+
   socket.on('uncaughtException', function (err) {
 	// console.error(err.stack);
 	return console.log("Node NOT Exiting...");
@@ -171,7 +171,7 @@ io.sockets.on('connection', function (socket) {
 //	console.error(err.stack);
 	console.log("Node NOT Exiting nadvor...");
 	});
-	
+
 	socket.on('limit', function(limitMessage) {
 		return console.log(limitMessage);
 	});
@@ -186,7 +186,7 @@ io.sockets.on('connection', function (socket) {
 	socket.on('error', function(error) {
 		return console.log('totalno nadvor OD TUKA' + error);
 	});
-  
+
 	setInterval(function() {
 		if ( new Date().getSeconds() === 0  || new Date().getSeconds() === 30 )  pollingLoop(socket);;
 	},1000);
@@ -214,9 +214,9 @@ var pollingLoop = function(socket) {
     .on('result', function(location) {
       // it fills our array looping on each user row inside the db
       locations.push(location);
-	  
+
   //    console.log(location);
-  
+
 	 /*  socket.broadcast.emit("mysql-data", locations);
 	  socket.emit('mysql-data', locations); */
     })
